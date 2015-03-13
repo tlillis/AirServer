@@ -53,7 +53,7 @@
 // ------------------------------------------------------------------------------
 
 #include "serial_port.h"
-
+#include <iostream>
 
 // ----------------------------------------------------------------------------------
 //   Serial Port Manager Class
@@ -122,8 +122,6 @@ read_message(mavlink_message_t &message)
 
     // this function locks the port during read
     int result = _read_port(cp);
-
-
     // --------------------------------------------------------------------------
     //   PARSE MESSAGE
     // --------------------------------------------------------------------------
@@ -131,7 +129,7 @@ read_message(mavlink_message_t &message)
     {
         // the parsing
         msgReceived = mavlink_parse_char(MAVLINK_COMM_1, cp, &message, &status);
-
+        //std::cout << "This is a test : " << status << std::endl;
         // check for dropped packets
         if ( (lastStatus.packet_rx_drop_count != status.packet_rx_drop_count) && debug )
         {
@@ -507,12 +505,10 @@ _read_port(uint8_t &cp)
 {
 
     // Lock
-    pthread_mutex_lock(&lock);
-
+    //pthread_mutex_lock(&lock);
     int result = read(fd, &cp, 1);
-
     // Unlock
-    pthread_mutex_unlock(&lock);
+    //pthread_mutex_unlock(&lock);
 
     return result;
 }

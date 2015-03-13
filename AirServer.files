@@ -1874,3 +1874,5 @@ mavlink_types.h
 protocol.h
 serial_port.cpp
 serial_port.h
+serialdata.cpp
+serialdata.h

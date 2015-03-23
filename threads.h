@@ -7,6 +7,9 @@
 #include "Poco/Net/WebSocket.h"
 #include "Poco/Net/HTTPClientSession.h"
 
+#include "Poco/Net/DatagramSocket.h"
+#include "Poco/Net/SocketAddress.h"
+
 #include "serial_port.h"
 
 #include <queue>
@@ -35,9 +38,29 @@ class WebSocketThread : public Poco::Runnable{
 private:
     int _id;
     Poco::Mutex * _lock;
+    std::queue <char *> * _tosend;
+public:
+    WebSocketThread (int id, Poco::Mutex * lock, std::queue <char *> * tosend) : _id(id), _lock(lock), _tosend(tosend) {}
+    void run();
+};
+
+class UDPThread : public Poco::Runnable{
+private:
+    int _id;
+    Poco::Mutex * _lock;
     std::queue <mavlink_message_t> * _tosend;
 public:
-    WebSocketThread (int id, Poco::Mutex * lock, std::queue <mavlink_message_t> * tosend) : _id(id), _lock(lock), _tosend(tosend) {}
+    UDPThread (int id, Poco::Mutex * lock, std::queue <mavlink_message_t> * tosend) : _id(id), _lock(lock), _tosend(tosend) {}
+    void run();
+};
+
+class MessageLoggingThread : public Poco::Runnable{
+private:
+    int _id;
+    Poco::Mutex * _lock;
+    std::queue <mavlink_message_t> * _tosend;
+public:
+    MessageLoggingThread (int id, Poco::Mutex * lock, std::queue <mavlink_message_t> * tosend) : _id(id), _lock(lock), _tosend(tosend) {}
     void run();
 };
 

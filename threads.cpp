@@ -1,6 +1,6 @@
 #include "threads.h"
 
-void AutopilotSerialThread::run(){
+void AutopilotSerialThread::run() {
     mavlink_message_t message;
     //char * port = "/dev/ttyACM0";
     //int baud = 38400;
@@ -32,35 +32,55 @@ void AutopilotSerialThread::run(){
     }
 };
 
-void WebSocketThread::run(){
+void WebSocketThread::run() {
     HTTPClientSession cs("localhost",9000);
     HTTPRequest request(HTTPRequest::HTTP_GET, "/",HTTPMessage::HTTP_1_1);
     request.set("origin", "http://www.websocket.org");
     HTTPResponse response;
 
+    char * message;
+
     while(true) {
+
+        _lock->lock();
         if(!_tosend->empty()) {
             try {
             WebSocket* m_psock = new WebSocket(cs, request, response);
-            char *testStr="Hello echo websocket!";
-            char receiveBuff[strlen(testStr)];
 
-            int len=m_psock->sendFrame(testStr,strlen(testStr),WebSocket::FRAME_TEXT);
+            message = _tosend->front();
+            _tosend->pop();
+
+            char receiveBuff[strlen(message)];
+
+            int len=m_psock->sendFrame(message,strlen(message),WebSocket::FRAME_TEXT);
             std::cout << "Sent bytes " << len << std::endl;
             int flags=0;
 
-            int rlen=m_psock->receiveFrame(receiveBuff,strlen(testStr),flags);
+            int rlen=m_psock->receiveFrame(receiveBuff,strlen(message),flags);
             std::cout << "Received bytes " << rlen << std::endl;
             std::cout << receiveBuff << std::endl ;
 
             m_psock->close();
 
             } catch (std::exception &e) {
-                std::cout << "Exception " << e.what();
+                std::cout << "Exception " << e.what() << endl;
             }
 
         } else {
             sleep(.1);
         }
+        _lock->unlock();
+        sleep(.5);
     }
+};
+
+void UDPThread::run() {
+    Poco::Net::SocketAddress sa("localhost", 514);
+    Poco::Net::DatagramSocket dgs;
+    dgs.connect(sa);
+};
+
+void MessageLoggingThread::run() {
+
+
 };

@@ -9,9 +9,6 @@
 #include "Poco/RWLock.h"
 #include "Poco/Mutex.h"
 
-#include "Poco/Net/DatagramSocket.h"
-#include "Poco/Net/SocketAddress.h"
-
 #include "threads.h"
 #include "conversions.h"
 #include "initialization.h"
@@ -22,8 +19,7 @@ using Poco::SimpleFileChannel;
 using Poco::Logger;
 using Poco::FileChannel;
 
-int main()
-{
+int main() {
     cout << "Starting AirServer..." << endl << endl;
 
     //load ini file
@@ -36,68 +32,42 @@ int main()
 
     //Create a queue for getting data between threads
     queue <mavlink_message_t> msg_queue_send;
-
-    cout << "Starting autopilot serial connection..." << endl;
+    queue <char *> msg_queue_socket;
 
     Poco::Mutex lock;
+    Poco::Mutex lock_socket;
+
     AutopilotSerialThread autopilot_thread(1, &lock, &msg_queue_send);
+    WebSocketThread websocket_thread(1, &lock_socket, &msg_queue_socket);
 
     Poco::ThreadPool pool;
     pool.start(autopilot_thread);
+    pool.start(websocket_thread);
 
     mavlink_message_t message;
 
-    Poco::Net::SocketAddress sa("localhost", 514);
-    Poco::Net::DatagramSocket dgs;
-    dgs.connect(sa);
- /**
-    HTTPClientSession cs("localhost",9000);
-    HTTPRequest request(HTTPRequest::HTTP_GET, "/",HTTPMessage::HTTP_1_1);
-    request.set("origin", "http://www.websocket.org");
-    HTTPResponse response;
+    char json[256];
 
-    try {
-        WebSocket* m_psock = new WebSocket(cs, request, response);
-        char *testStr="Hello echo websocket!";
-        char receiveBuff[strlen(testStr)];
-
-        int len=m_psock->sendFrame(testStr,strlen(testStr),WebSocket::FRAME_TEXT);
-        std::cout << "Sent bytes " << len << std::endl;
-        int flags=0;
-
-        int rlen=m_psock->receiveFrame(receiveBuff,strlen(testStr),flags);
-        std::cout << "Received bytes " << rlen << std::endl;
-        std::cout << receiveBuff << std::endl ;
-
-        m_psock->close();
-
-    } catch (std::exception &e) {
-        std::cout << "Exception " << e.what();
-    }
-**/
     printf("Waiting for first data from devices...");
-    while(msg_queue_send.empty())
-    {
+    while(msg_queue_send.empty()) {
     }
 
     int previous_id = -1;
-    while(!msg_queue_send.empty())
-    {
+    while(!msg_queue_send.empty()) {
         lock.lock();
         message = msg_queue_send.front();
         msg_queue_send.pop();
         lock.unlock();
 
-        if(message.msgid != previous_id)
-        {
-
-
-            mav_to_json(message);
+        if(message.msgid != previous_id) {
+            mav_to_json(message,json);
+            //lock_socket.lock();
+            msg_queue_socket.push(json);
+            //lock_socket.unlock();
 
             previous_id = message.msgid;
             sleep(1);
         }
-
     }
     printf("Reached end of loop...");
     pool.joinAll();

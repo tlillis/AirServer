@@ -16,6 +16,11 @@
 #include "Poco/Mutex.h"
 #include "Poco/Net/DatagramSocket.h"
 #include "Poco/Net/SocketAddress.h"
+#include "Poco/Net/HTTPRequest.h"
+#include "Poco/Net/HTTPResponse.h"
+#include "Poco/Net/HTTPMessage.h"
+#include "Poco/Net/WebSocket.h"
+#include "Poco/Net/HTTPClientSession.h"
 
 #include "serialdata.h"
 #include "serial_port.h"
@@ -26,6 +31,11 @@ using Poco::Util::IniFileConfiguration;
 using Poco::SimpleFileChannel;
 using Poco::Logger;
 using Poco::FileChannel;
+using Poco::Net::HTTPClientSession;
+using Poco::Net::HTTPRequest;
+using Poco::Net::HTTPResponse;
+using Poco::Net::HTTPMessage;
+using Poco::Net::WebSocket;
 
 class AutopilotSerialThread : public Poco::Runnable{
 private:
@@ -35,25 +45,38 @@ private:
 public:
     AutopilotSerialThread (int id, Poco::Mutex * lock, queue <mavlink_message_t> * collector) : _id(id), _lock(lock), _collector(collector) {}
     void run(){
-        cout << "This is a test" << endl;
         mavlink_message_t message;
         //char * port = "/dev/ttyACM0";
         //int baud = 38400;
-        char * port = "/dev/pts/18";
+        char * port = "/dev/pts/8";
         int baud = 9600;
         Serial_Port serial_port(port,baud);
-        serial_port.start();
+        try {
+            serial_port.start();
 
-        while(true){
-           _lock->lock(); //acquire lock
-           if (serial_port.status == 1){
-              serial_port.read_message(message);
-           }
-           //printf("In thread %d\n",message.msgid);
-           _collector->push(message);
-           _lock->unlock();  //release lock
+            while(true){
+
+                _lock->lock(); //acquire lock
+                if (serial_port.status == 1){
+                serial_port.read_message(message);
+                }
+                else {
+                    break;
+
+                }
+                //printf("In thread %d\n",message.msgid);
+                _collector->push(message);
+                _lock->unlock();  //release lock
+            }
         }
-
+        catch (exception& e)
+        {
+            cout << e.what() << '\n';
+        }
+        catch (int exit_failure)
+        {
+            cout << exit_failure << endl;
+        }
     }
 };
 
@@ -411,6 +434,30 @@ int main()
     Poco::Net::DatagramSocket dgs;
     dgs.connect(sa);
 
+    HTTPClientSession cs("localhost",9980);
+    HTTPRequest request(HTTPRequest::HTTP_GET, "/",HTTPMessage::HTTP_1_1);
+    request.set("origin", "http://www.websocket.org");
+    HTTPResponse response;
+
+    try {
+        WebSocket* m_psock = new WebSocket(cs, request, response);
+        char *testStr="Hello echo websocket!";
+        char receiveBuff[strlen(testStr)];
+
+        int len=m_psock->sendFrame(testStr,strlen(testStr),WebSocket::FRAME_TEXT);
+        std::cout << "Sent bytes " << len << std::endl;
+        int flags=0;
+
+        int rlen=m_psock->receiveFrame(receiveBuff,strlen(testStr),flags);
+        std::cout << "Received bytes " << rlen << std::endl;
+        std::cout << receiveBuff << std::endl ;
+
+        m_psock->close();
+
+    } catch (std::exception &e) {
+        std::cout << "Exception " << e.what();
+    }
+
     printf("Waiting for first data from devices...");
     while(msg_queue_send.empty())
     {
@@ -438,7 +485,6 @@ int main()
         }
 
     }
-    cout << "WUT" << endl;
     printf("Reached end of loop...");
     pool.joinAll();
     return 0;

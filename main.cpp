@@ -23,14 +23,14 @@ int main() {
     cout << "Starting AirServer..." << endl << endl;
 
     //load ini file
-    Initialization config;
-    if(config.load()) {
+    Initialization ini;
+    if(ini.load()) {
         cout << "Unable to load configuration file." << endl;
         return 0;
     }
-    config.print();
+    ini.print();
 
-    //Create a queue for getting data between threads
+    //Create a queues for getting data between threads
     queue <mavlink_message_t> msg_queue_send;
     queue <char *> msg_queue_socket;
 
@@ -38,38 +38,40 @@ int main() {
     Poco::Mutex lock_socket;
 
     AutopilotSerialThread autopilot_thread(1, &lock, &msg_queue_send);
-    WebSocketThread websocket_thread(1, &lock_socket, &msg_queue_socket);
+    WebSocketThread websocket_thread(2, &lock_socket, &msg_queue_socket);
 
     Poco::ThreadPool pool;
     pool.start(autopilot_thread);
     pool.start(websocket_thread);
 
-    mavlink_message_t message;
+    mavlink_message_t message_mav;
+    char message_json [256];
 
-    char json[256];
-
-    printf("Waiting for first data from devices...");
+    cout << "Waiting for first data from devices..." << endl;
     while(msg_queue_send.empty()) {
     }
 
     int previous_id = -1;
-    while(!msg_queue_send.empty()) {
+    while(true) {
         lock.lock();
-        message = msg_queue_send.front();
-        msg_queue_send.pop();
-        lock.unlock();
+        if(!msg_queue_send.empty()) {
+            message_mav = msg_queue_send.front();
+            msg_queue_send.pop();
+            lock.unlock();
 
-        if(message.msgid != previous_id) {
-            mav_to_json(message,json);
-            //lock_socket.lock();
-            msg_queue_socket.push(json);
-            //lock_socket.unlock();
+            if(message_mav.msgid != previous_id) {
+                mav_to_json(message_mav,message_json);
 
-            previous_id = message.msgid;
-            sleep(1);
+                lock_socket.lock();
+                msg_queue_socket.push(message_json);
+                lock_socket.unlock();
+
+                previous_id = message_mav.msgid;
+                sleep(1);
+            }
         }
     }
-    printf("Reached end of loop...");
+
     pool.joinAll();
     return 0;
 }

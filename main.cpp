@@ -1,8 +1,3 @@
-#include "Poco/Logger.h"
-#include "Poco/Message.h"
-#include "Poco/SimpleFileChannel.h"
-#include "Poco/FileChannel.h"
-
 #include "Poco/Thread.h"
 #include "Poco/Runnable.h"
 #include "Poco/ThreadPool.h"
@@ -14,10 +9,6 @@
 #include "initialization.h"
 
 using namespace std;
-
-using Poco::SimpleFileChannel;
-using Poco::Logger;
-using Poco::FileChannel;
 
 int main() {
     cout << "Starting AirServer..." << endl << endl;
@@ -32,17 +23,25 @@ int main() {
 
     //Create a queues for getting data between threads
     queue <mavlink_message_t> msg_queue_send;
+    queue <mavlink_message_t> msg_queue_udp;
     queue <char *> msg_queue_socket;
+    queue <char *> msg_queue_logging;
 
-    Poco::Mutex lock;
+    Poco::Mutex lock_serial;
     Poco::Mutex lock_socket;
+    Poco::Mutex lock_udp;
+    Poco::Mutex lock_messagelogging;
 
-    AutopilotSerialThread autopilot_thread(1, &lock, &msg_queue_send);
-    WebSocketThread websocket_thread(2, &lock_socket, &msg_queue_socket);
+    AutopilotSerialThread autopilot_thread(1, &lock_serial, &msg_queue_send, ini.autopilot_file, ini.autopilot_baud);
+    WebSocketThread websocket_thread(2, &lock_socket, &msg_queue_socket, ini.websocket_address, ini.websocket_port);
+    UDPThread udp_thread(3, &lock_udp, &msg_queue_udp,ini.udp_address, ini.udp_port);
+    //MessageLoggingThread messagelogging_thread(4, &lock_messagelogging, &msg_queue_logging);
 
     Poco::ThreadPool pool;
     pool.start(autopilot_thread);
     pool.start(websocket_thread);
+    pool.start(udp_thread);
+    //pool.start(messagelogging_thread);
 
     mavlink_message_t message_mav;
     char message_json [256];
@@ -51,15 +50,16 @@ int main() {
     while(msg_queue_send.empty()) {
     }
 
+    cout << "Starting main loop..." << endl;
     int previous_id = -1;
     while(true) {
-        lock.lock();
+        lock_serial.lock();
         if(!msg_queue_send.empty()) {
             message_mav = msg_queue_send.front();
             msg_queue_send.pop();
-            lock.unlock();
 
             if(message_mav.msgid != previous_id) {
+
                 mav_to_json(message_mav,message_json);
 
                 lock_socket.lock();
@@ -67,9 +67,16 @@ int main() {
                 lock_socket.unlock();
 
                 previous_id = message_mav.msgid;
+
+                lock_udp.lock();
+                msg_queue_udp.push(message_mav);
+
+                lock_udp.unlock();
+
                 sleep(1);
             }
         }
+        lock_serial.unlock();
     }
 
     pool.joinAll();

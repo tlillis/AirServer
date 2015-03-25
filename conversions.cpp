@@ -15,15 +15,11 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Heart Beat
             mavlink_heartbeat_t heartbeat;
 
-            printf("MAVLINK_MSG_ID_HEARTBEAT\n");
+            //printf("MAVLINK_MSG_ID_HEARTBEAT\n");
             mavlink_msg_heartbeat_decode(&message, &(heartbeat));
-            /**
-            printf("Heart Beat:\n");
-            printf("Type:%i   AutoPilot:%i   Base Mode:%i\n",heartbeat.type,heartbeat.autopilot,heartbeat.base_mode);
-            printf("Custom Mode:%i   System Status:%i   Mavlink Version:%i\n",heartbeat.custom_mode,heartbeat.system_status,heartbeat.mavlink_version);
-            printf("\n");
-            **/
-            if(sprintf(json_buffer,"{\"HRT\":{\"type\":%i,\"autoPilot\":%i,\"baseMode\":%i}}",heartbeat.type,heartbeat.autopilot,heartbeat.base_mode) < 0) return -1;
+
+            if(sprintf(json_buffer,"{\"HRT\":{\"type\":%i,\"autoPilot\":%i,\"baseMode\":%i}}",
+                                    heartbeat.type,heartbeat.autopilot,heartbeat.base_mode) < 0) return -1;
             return 0;
         }
 
@@ -32,17 +28,20 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // System Status
             mavlink_sys_status_t sys_status;
 
-            printf("MAVLINK_MSG_ID_SYS_STATUS\n");
+            //printf("MAVLINK_MSG_ID_SYS_STATUS\n");
             mavlink_msg_sys_status_decode(&message, &(sys_status));
-            /**
-            printf("System Status\n");
-            printf("Onboard Control Sensors Present: %i \nOnboard Control Sensors Enabled: %i \nOnboard Control Sensors Health: %i\n",sys_status.onboard_control_sensors_present,sys_status.onboard_control_sensors_enabled,sys_status.onboard_control_sensors_health);
-            printf("Load: %i\n",sys_status.load);
-            printf("Voltage: %i, Current: %i, Remaining: %i\n",sys_status.voltage_battery,sys_status.current_battery,sys_status.battery_remaining);
-            printf("Communication Drops(percent): %i\n", sys_status.drop_rate_comm);
-            printf("Communication Errors: %i\n", sys_status.errors_comm);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"STA\":{\"controlSensors\":%i,\"enabled\":%i,\"health\":%i,"
+                            "\"load\":%i,\"voltage\":%i,\"current\":%i,\"remaining\":%i,"
+                            "\"comDrops\":%i,\"comErrors\":%i}}",
+                            sys_status.onboard_control_sensors_present,
+                            sys_status.onboard_control_sensors_enabled,
+                            sys_status.onboard_control_sensors_health,
+                            sys_status.load,
+                            sys_status.voltage_battery,sys_status.current_battery,
+                            sys_status.battery_remaining,sys_status.drop_rate_comm,
+                            sys_status.errors_comm) < 0) return -1;
+
             return 0;
         }
 
@@ -51,7 +50,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Battery Status
             mavlink_battery_status_t battery_status;
 
-            printf("MAVLINK_MSG_ID_BATTERY_STATUS\n");
+            //printf("MAVLINK_MSG_ID_BATTERY_STATUS\n");
             mavlink_msg_battery_status_decode(&message, &(battery_status));
             printf("\n");
             return 0;
@@ -62,7 +61,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Radio Status
             mavlink_radio_status_t radio_status;
 
-            printf("MAVLINK_MSG_ID_RADIO_STATUS\n");
+            //printf("MAVLINK_MSG_ID_RADIO_STATUS\n");
             mavlink_msg_radio_status_decode(&message, &(radio_status));
             printf("\n");
             return 0;
@@ -73,12 +72,12 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Local Position
             mavlink_local_position_ned_t local_position_ned;
 
-            printf("MAVLINK_MSG_ID_LOCAL_POSITION_NED\n");
+            //printf("MAVLINK_MSG_ID_LOCAL_POSITION_NED\n");
             mavlink_msg_local_position_ned_decode(&message, &(local_position_ned));
-            /**
-            printf("    pos  (NED):  %f %f %f (m)\n\n", local_position_ned.x, local_position_ned.y, local_position_ned.z );
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"NED\":{\"nedX\":%f,\"nedY\":%f,\"nedZ\":%f}}",
+                                        local_position_ned.x, local_position_ned.y,
+                                        local_position_ned.z ) < 0) return -1;
             return 0;
         }
 
@@ -87,16 +86,15 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Global Position
             mavlink_global_position_int_t global_position_int;
 
-            printf("MAVLINK_MSG_ID_GLOBAL_POSITION_INT\n");
+            //printf("MAVLINK_MSG_ID_GLOBAL_POSITION_INT\n");
             mavlink_msg_global_position_int_decode(&message, &(global_position_int));
-            /**
-            printf("GPS:\n");
-            printf("Time Stamp: %i",global_position_int.time_boot_ms);
-            printf("Lat: %i  Lon: %i  Alt: %i Relative Alt: %i\n",global_position_int.lat, global_position_int.lon, global_position_int.alt,global_position_int.relative_alt);
-            printf("Speed X: %i  Speed Y: %i Speed Z: %i\n",global_position_int.vx,global_position_int.vy,global_position_int.vz);
-            printf("\n");
-            **/
-            if(sprintf(json_buffer,"{\"GPS\":{\"time\":%i,\"lat\":%i,\"lon\":%i,\"alt\":%i,\"relAlt\":%i,\"velX\":%i,\"velY\":%i,\"velZ\":%i}}",global_position_int.time_boot_ms,global_position_int.lat, global_position_int.lon, global_position_int.alt,global_position_int.relative_alt,global_position_int.vx,global_position_int.vy,global_position_int.vz) < 0) return -1;
+
+            if(sprintf(json_buffer,"{\"GPS\":{\"time\":%i,\"lat\":%i,\"lon\":%i,\"alt\":%i,\"relAlt\":%i,"
+                                        "\"velX\":%i,\"velY\":%i,\"velZ\":%i}}",
+                                        global_position_int.time_boot_ms,global_position_int.lat,
+                                        global_position_int.lon, global_position_int.alt,
+                                        global_position_int.relative_alt,global_position_int.vx,
+                                        global_position_int.vy,global_position_int.vz) < 0) return -1;
             return 0;
         }
 
@@ -105,7 +103,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Local Position Target
             mavlink_position_target_local_ned_t position_target_local_ned;
 
-            printf("MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED\n");
+            //printf("MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED\n");
             mavlink_msg_position_target_local_ned_decode(&message, &(position_target_local_ned));
             printf("\n");
             return 0;
@@ -116,7 +114,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Global Position Target
             mavlink_position_target_global_int_t position_target_global_int;
 
-            printf("MAVLINK_MSG_ID_POSITION_TARGET_GLOBAL_INT\n");
+            //printf("MAVLINK_MSG_ID_POSITION_TARGET_GLOBAL_INT\n");
             mavlink_msg_position_target_global_int_decode(&message, &(position_target_global_int));
             printf("\n");
             return 0;
@@ -127,19 +125,19 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // HiRes IMU
             mavlink_highres_imu_t imu;
 
-            printf("MAVLINK_MSG_ID_HIGHRES_IMU\n");
+            //printf("MAVLINK_MSG_ID_HIGHRES_IMU\n");
             mavlink_msg_highres_imu_decode(&message, &(imu));
-            /**
-            printf("Got message HIGHRES_IMU (spec: https://pixhawk.ethz.ch/mavlink/#HIGHRES_IMU)\n");
-            printf("    ap time:     %lu \n", imu.time_usec);
-            printf("    acc  (NED):  % f % f % f (m/s^2)\n", imu.xacc , imu.yacc , imu.zacc );
-            printf("    gyro (NED):  % f % f % f (rad/s)\n", imu.xgyro, imu.ygyro, imu.zgyro);
-            printf("    mag  (NED):  % f % f % f (Ga)\n"   , imu.xmag , imu.ymag , imu.zmag );
-            printf("    baro:        %f (mBar) \n"  , imu.abs_pressure);
-            printf("    altitude:    %f (m) \n"     , imu.pressure_alt);
-            printf("    temperature: %f C \n"       , imu.temperature );
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"IMH\":{\"time\":%lu,\"accX\":%f,\"accY\":%f,\"accZ\":%f,"
+                                        "\"gyroX\":%f,\"gyroY\":%f,\"gyrcoZ\":%f,"
+                                        "\"magX\":%f,\"magY\":%f,\"magZ\":%f,"
+                                        "\"baro\":%f,\"alt\":%f,\"temp\":%f}}",
+                                        imu.time_usec,imu.xacc,imu.yacc,imu.zacc,
+                                        imu.xgyro,imu.ygyro,imu.zgyro,
+                                        imu.xmag,imu.ymag,imu.zmag,
+                                        imu.abs_pressure,imu.pressure_alt,
+                                        imu.temperature) < 0) return -1;
+
             return 0;
         }
 
@@ -148,15 +146,14 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
              // Attitude
             mavlink_attitude_t attitude;
 
-            printf("MAVLINK_MSG_ID_ATTITUDE\n");
+            //printf("MAVLINK_MSG_ID_ATTITUDE\n");
             mavlink_msg_attitude_decode(&message, &(attitude));
-            /**
-            printf("Attitude:\n");
-            printf("Time Stamp: %i\n", attitude.time_boot_ms);
-            printf("R:%f P:%f Y:%f RS:%f PS:%f YS:%f\n", attitude.roll,attitude.pitch,attitude.yaw,attitude.rollspeed,attitude.pitchspeed,attitude.yawspeed);
-            printf("\n");
-            **/
-            if(sprintf(json_buffer,"{\"ATT\":{\"time\":%i,\"roll\":%f,\"pitch\":%f,\"yaw\":%f,\"rollSpeed\":%f,\"pitchSpeed\":%f,\"yawSpeed\":%f}}",attitude.time_boot_ms,attitude.roll,attitude.pitch,attitude.yaw,attitude.rollspeed,attitude.pitchspeed,attitude.yawspeed) < 0) return -1;
+
+            if(sprintf(json_buffer,"{\"ATT\":{\"time\":%i,\"roll\":%f,\"pitch\":%f,\"yaw\":%f,"
+                                        "\"rollSpeed\":%f,\"pitchSpeed\":%f,\"yawSpeed\":%f}}",
+                                        attitude.time_boot_ms,attitude.roll,attitude.pitch,attitude.yaw,
+                                        attitude.rollspeed,attitude.pitchspeed,
+                                        attitude.yawspeed) < 0) return -1;
 
             return 0;
         }
@@ -166,14 +163,16 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Raw RC Channels
             mavlink_rc_channels_raw_t channels;
 
-            printf("MAVLINK_MSG_ID_RC_CHANNELS_RAW\n");
+            //printf("MAVLINK_MSG_ID_RC_CHANNELS_RAW\n");
             mavlink_msg_rc_channels_raw_decode(&message, &(channels));
-            /**
-            printf("Raw RC Channels:\n");
-            printf("Time Stamp: %i    Port: %i\n",channels.time_boot_ms,channels.port);
-            printf("1: %i \n2: %i \n3: %i \n4: %i \n5: %i \n6: %i \n7: %i \n8: %i\n",channels.chan1_raw,channels.chan2_raw,channels.chan3_raw,channels.chan4_raw,channels.chan5_raw,channels.chan6_raw,channels.chan7_raw,channels.chan8_raw);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"RCR\":{\"time\":%i,\"port\":%i,\"chan1\":%i,\"chan2\":%i,"
+                                        "\"chan3\":%i,\"chan4\":%i,\"chan5\":%i,\"chan6\":%i,"
+                                        "\"chan7\":%i,\"chan8\":%i}}",
+                                        channels.time_boot_ms,channels.port,channels.chan1_raw,
+                                        channels.chan2_raw,channels.chan3_raw,channels.chan4_raw,
+                                        channels.chan5_raw,channels.chan6_raw,channels.chan7_raw,
+                                        channels.chan8_raw) < 0) return -1;
             return 0;
         }
 
@@ -182,16 +181,15 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Terrain Report (136)
             mavlink_terrain_report_t terrain;
 
-            printf("MAVLINK_MSG_ID_TERRAIN_REPORT\n");
+            //printf("MAVLINK_MSG_ID_TERRAIN_REPORT\n");
             mavlink_msg_terrain_report_decode(&message, &(terrain));
-            /**
-            printf("Terrain Report:\n");
-            printf("Lat: %i  Lon: %i\n",terrain.lat,terrain.lon);
-            printf("Spacing: %i\n", terrain.spacing);
-            printf("Terrain Height: %f  Current Height %f\n", terrain.terrain_height, terrain.current_height);
-            printf("Pending: %i  Loaded: %i\n",terrain.pending,terrain.loaded);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"TER\":{\"lat\":%i,\"lon\":%i,"
+                                        "\"spacing\":%i,\"terrainHeight\":%f,\"currentHeight\":%f,"
+                                        "\"pending\":%i,\"loaded\":%i}}",
+                                        terrain.lat,terrain.lon,terrain.spacing,terrain.terrain_height,
+                                        terrain.current_height,terrain.pending,
+                                        terrain.loaded) < 0) return -1;
             return 0;
         }
 
@@ -200,14 +198,15 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Servo Output Raw (36)
             mavlink_servo_output_raw_t servo;
 
-            printf("MAVLINK_MSG_ID_SERVO_OUTPUT_RAW\n");
+            //printf("MAVLINK_MSG_ID_SERVO_OUTPUT_RAW\n");
             mavlink_msg_servo_output_raw_decode(&message, &(servo));
-            /**
-            printf("Raw Servo Output:\n");
-            printf("Time Stamp: %i    Port: %i\n",servo.time_usec,servo.port);
-            printf("1: %i \n2: %i \n3: %i \n4: %i \n5: %i \n6: %i \n7: %i \n8: %i\n",servo.servo1_raw,servo.servo2_raw,servo.servo3_raw,servo.servo4_raw,servo.servo5_raw,servo.servo6_raw,servo.servo7_raw,servo.servo8_raw);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"SOR\":{\"time\":%i,\"port\":%i,"
+                                        "\"servo1\":%i,\"servo2\":%i,\"servo3\":%i,\"servo4\":%i,"
+                                        "\"servo5\":%i,\"servo6\":%i,\"servo7\":%i,\"servo8\":%i}}",
+                                        servo.time_usec,servo.port,servo.servo1_raw,servo.servo2_raw,
+                                        servo.servo3_raw,servo.servo4_raw,servo.servo5_raw,
+                                        servo.servo6_raw,servo.servo7_raw,servo.servo8_raw) < 0) return -1;
             return 0;
         }
 
@@ -216,13 +215,10 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Mission Current (42)
             mavlink_mission_current_t mission_current;
 
-            printf("MAVLINK_MSG_ID_MISSION_CURRENT\n");
+            //printf("MAVLINK_MSG_ID_MISSION_CURRENT\n");
             mavlink_msg_mission_current_decode(&message, &(mission_current));
-            /**
-            printf("Mission Current:\n");
-            printf("Seq: %i\n",mission_current.seq);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"MIC\":{\"seq\":%i}}",mission_current.seq) < 0) return -1;
             return 0;
         }
 
@@ -231,13 +227,11 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // System Time (2)
             mavlink_system_time_t time;
 
-            printf("MAVLINK_MSG_ID_SYSTEM_TIME\n");
+            //printf("MAVLINK_MSG_ID_SYSTEM_TIME\n");
             mavlink_msg_system_time_decode(&message, &(time));
-            /**
-            printf("System Time:\n");
-            printf("Master Clock: %lld    Component Clock: %i\n",(long long)time.time_unix_usec,time.time_boot_ms);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"TIM\":{\"master\":%lld,\"component\":%i}}",
+                                        (long long)time.time_unix_usec,time.time_boot_ms) < 0) return -1;
             return 0;
         }
 
@@ -246,14 +240,13 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Scaled Pressure (29)
             mavlink_scaled_pressure_t pressure;
 
-            printf("MAVLINK_MSG_ID_SCALED_PRESSURE\n");
+            //printf("MAVLINK_MSG_ID_SCALED_PRESSURE\n");
             mavlink_msg_scaled_pressure_decode(&message, &(pressure));
-            /**
-            printf("Scaled Pressure:\n");
-            printf("Time Stamp: %i \n",pressure.time_boot_ms);
-            printf("Absolute: %f  Differential: %f  Temperature: %i\n",pressure.press_abs,pressure.press_diff,pressure.temperature);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"PRE\":{\"time\":%i,\"absolute\":%f,"
+                                        "\"differential\":%f,\"temperature\":%i}}",
+                                       pressure.time_boot_ms,pressure.press_abs,pressure.press_diff,
+                                       pressure.temperature) < 0) return -1;
             return 0;
         }
 
@@ -262,16 +255,16 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // Scaled IMU2 (116)
             mavlink_scaled_imu2_t imu2;
 
-            printf("MAVLINK_MSG_ID_SCALED_IMU2\n");
+            //printf("MAVLINK_MSG_ID_SCALED_IMU2\n");
             mavlink_msg_scaled_imu2_decode(&message, &(imu2));
-            /**
-            printf("Raw IMU 2:\n");
-            printf("Time Stamp: %i\n",imu2.time_boot_ms);
-            printf("ACC   X:%i  Y:%i  Z:%i\n",imu2.xacc,imu2.yacc,imu2.zacc);
-            printf("GYRO  X:%i  Y:%i  Z:%i\n",imu2.xgyro,imu2.ygyro,imu2.zgyro);
-            printf("MAG   X:%i  Y:%i  Z:%i\n",imu2.xmag,imu2.ymag,imu2.zmag);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"IM2\":{\"time\":%i,\"accX\":%i,\"accY\":%i,\"accZ\":%i,"
+                                        "\"gyroX\":%i,\"gyroY\":%i,\"gyroZ\":%i,"
+                                        "\"magX\":%i,\"magY\":%i,\"magZ\":%i}}",
+                                        imu2.time_boot_ms,imu2.xacc,imu2.yacc,imu2.zacc,
+                                        imu2.xgyro,imu2.ygyro,imu2.zgyro,
+                                        imu2.xmag,imu2.ymag,imu2.zmag) < 0) return -1;
+
             return 0;
         }
 
@@ -280,17 +273,17 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // GPS RAW INT (24)
             mavlink_gps_raw_int_t gps_raw;
 
-            printf("MAVLINK_MSG_ID_GPS_RAW_INT\n");
+            //printf("MAVLINK_MSG_ID_GPS_RAW_INT\n");
             mavlink_msg_gps_raw_int_decode(&message, &(gps_raw));
-            /**
-            printf("GPS Raw:\n");
-            printf("Time Stamp: %lld\n",(long long)gps_raw.time_usec);
-            printf("Fix Type: %i\n",gps_raw.fix_type);
-            printf("Lat:%i  Lon:%i  Alt:%i\n",gps_raw.lat,gps_raw.lon,gps_raw.alt);
-            printf("EPH:%i  EPV:%i  Vel:%i  COG: %i\n",gps_raw.eph,gps_raw.epv,gps_raw.vel,gps_raw.cog);
-            printf("Satellites:%i\n",gps_raw.satellites_visible);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"GPR\":{\"time\":%lld,\"fixType\":%i,"
+                                        "\"lat\":%i,\"lon\":%i,\"alt\":%i,"
+                                        "\"ehp\":%i,\"epv\":%i,\"velocity\":%i,\"cog\":%i,"
+                                        "\"satellites\":%i}}",
+                                        (long long)gps_raw.time_usec,gps_raw.fix_type,
+                                        gps_raw.lat,gps_raw.lon,gps_raw.alt,
+                                        gps_raw.eph,gps_raw.epv,gps_raw.vel,gps_raw.cog,
+                                        gps_raw.satellites_visible) < 0) return -1;
             return 0;
         }
 
@@ -299,16 +292,15 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // RAW IMU (27)
             mavlink_raw_imu_t imu_raw;
 
-            printf("MAVLINK_MSG_ID_RAW_IMU\n");
+            //printf("MAVLINK_MSG_ID_RAW_IMU\n");
             mavlink_msg_raw_imu_decode(&message, &(imu_raw));
-            /**
-            printf("Raw IMU:\n");
-            printf("Time Stamp: %lld\n",(long long)imu_raw.time_usec);
-            printf("ACC   X:%i  Y:%i  Z:%i\n",imu_raw.xacc,imu_raw.yacc,imu_raw.zacc);
-            printf("GYRO  X:%i  Y:%i  Z:%i\n",imu_raw.xgyro,imu_raw.ygyro,imu_raw.zgyro);
-            printf("MAG   X:%i  Y:%i  Z:%i\n",imu_raw.xmag,imu_raw.ymag,imu_raw.zmag);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"IMU\":{\"time\":%lld,\"accX\":%i,\"accY\":%i,\"accZ\":%i,"
+                                        "\"gyroX\":%i,\"gyroY\":%i,\"gyroZ\":%i,"
+                                        "\"magX\":%i,\"magY\":%i,\"magZ\":%i}}",
+                                        (long long)imu_raw.time_usec,imu_raw.xacc,imu_raw.yacc,imu_raw.zacc,
+                                        imu_raw.xgyro,imu_raw.ygyro,imu_raw.zgyro,
+                                        imu_raw.xmag,imu_raw.ymag,imu_raw.zmag) < 0) return -1;
             return 0;
         }
 
@@ -317,16 +309,13 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             // VFW_HUD (74)
             mavlink_vfr_hud_t vfr;
 
-            printf("MAVLINK_MSG_ID_VFR_HUD\n");
+            //printf("MAVLINK_MSG_ID_VFR_HUD\n");
             mavlink_msg_vfr_hud_decode(&message, &(vfr));
-            /**
-            printf("VFR HUD:\n");
-            printf("Airspeed: %f  Groundspeed: %f\n",vfr.airspeed,vfr.groundspeed);
-            printf("Heading: %i\n",vfr.heading);
-            printf("Throttle: %i\n",vfr.throttle);
-            printf("Alt: %f  Climb: %f\n",vfr.alt,vfr.climb);
-            printf("\n");
-            **/
+
+            if(sprintf(json_buffer,"{\"VFR\":{\"airspeed\":%f,\"groundspeed\":%f,\"heading\":%i,"
+                                        "\"throttle\":%i,\"alt\":%f,\"climb\":%f,}}",
+                                        vfr.airspeed,vfr.groundspeed,vfr.heading,vfr.throttle,
+                                        vfr.alt,vfr.climb) < 0) return -1;
             return 0;
         }
 

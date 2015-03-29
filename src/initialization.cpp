@@ -1,4 +1,4 @@
-#include "initialization.h"
+#include "../include/initialization.h"
 
 Initialization::Initialization() {
     read = false; //mark values as not read

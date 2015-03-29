@@ -1,30 +1,21 @@
-#include "threads.h"
+#include "../include/threads.h"
+
+#include <fstream>
+#include <iostream>
 
 void AutopilotSerialThread::run() {
     mavlink_message_t message;
     char * port = (char*)_file.c_str();
 
     Serial_Port serial_port(port, _baud);
-    //char * port2 = "/dev/pts/24";
-    //Serial_Port serial_port2(port2,baud);
-
-    //int hey = 0;
-    //int nah = 0;
 
     try {
         serial_port.start();
-        //serial_port2.start();
-
-        //int test = 0;
 
         while(true) {
 
             if (serial_port.status == 1) {
                 serial_port.read_message(message);
-                //if(!test) hey++;
-                //else cout << test << endl;;
-                //cout << "HEY: " << hey << " NAH: " << nah << endl;
-                //serial_port2.write_message(message);
             }
             else {
                 break;
@@ -35,10 +26,7 @@ void AutopilotSerialThread::run() {
         }
     }
     catch (std::exception& e) {
-        std::cout << e.what() << std::endl;
-    }
-    catch (int exit_failure) {
-        std::cout << exit_failure << std::endl;
+        std::cout << "Exception: " << e.what() << std::endl;
     }
 };
 
@@ -110,7 +98,7 @@ void UDPThread::run() {
                 _tosend->pop();
 
             } catch (std::exception &e) {
-                //std::cout << "Exception: " << e.what() << endl;
+                //std::cout << "Exception: " << e.what() << std::endl;
             }
 
         } else {
@@ -122,6 +110,30 @@ void UDPThread::run() {
 };
 
 void MessageLoggingThread::run() {
+    std::ofstream message_file;
+    message_file.open (_address.c_str());
 
+    char * message;
+
+    while (true) {
+        _lock->lock();
+        if(!_tolog->empty()) {
+            try {
+                message = _tolog->front();
+
+                if (message_file.is_open()) {
+                    message_file << message << std::endl;
+                }
+
+                _tolog->pop();
+
+            } catch (std::exception &e) {
+                std::cout << "Exception: " << e.what() << std::endl;
+            }
+        }
+        _lock->unlock();
+    }
+
+    message_file.close();
 
 };

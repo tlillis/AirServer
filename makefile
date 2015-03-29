@@ -1,5 +1,12 @@
 #RECUV Airserver
+CXX = g++
+CXXFLAGS = -Wall
+LIBS = -lPocoFoundation -lPocoNet -lPocoUtil -lPocoXML -lpthread
+SOURCES := \
+	$(wildcard src/*.cpp)
+PROGRAM = airserver
 all:
-	g++ -Wall -I/usr/local/Poco/include -o AirServer main.cpp serial_port.cpp threads.cpp conversions.cpp initialization.cpp -L/usr/local/Poco/lib -lPocoFoundation -lPocoNet -lPocoUtil -lPocoXML -lpthread
+	$(CXX) $(CXXFLAGS) -o $(PROGRAM) $(SOURCES) $(LIBS)
+	chmod +x sitl.sh
 clean:
-	$(RM) AirServer
+	rm $(PROGRAM)

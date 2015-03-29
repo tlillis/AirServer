@@ -1,10 +1,8 @@
-#include "conversions.h"
+#include "../include/conversions.h"
 
 int mav_to_json(mavlink_message_t &message,char *json_buffer)
 {
     int msgid = message.msgid;
-
-    sprintf(json_buffer,"SYSTEM ID: %i",msgid);
 
     // Handle Message ID
     switch (msgid)
@@ -313,7 +311,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             mavlink_msg_vfr_hud_decode(&message, &(vfr));
 
             if(sprintf(json_buffer,"{\"VFR\":{\"airspeed\":%f,\"groundspeed\":%f,\"heading\":%i,"
-                                        "\"throttle\":%i,\"alt\":%f,\"climb\":%f,}}",
+                                        "\"throttle\":%i,\"alt\":%f,\"climb\":%f}}",
                                         vfr.airspeed,vfr.groundspeed,vfr.heading,vfr.throttle,
                                         vfr.alt,vfr.climb) < 0) return -1;
             return 0;
@@ -321,7 +319,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
 
         default:
         {
-            printf("Warning, did not handle message id %i\n\n",msgid);
+            sprintf(json_buffer,"{\"ERR\":{\"msgID\":%i}}",msgid);
             return -1;
         }
     }

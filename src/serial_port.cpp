@@ -132,13 +132,13 @@ read_message(mavlink_message_t &message)
         // check for dropped packets
         if((msgReceived < 1) && (status.packet_rx_drop_count > 0))
         {
-            //printf("OKOKOKOK");
+            //printf("ERROR: DROPPED %d PACKETS\n", status.packet_rx_drop_count);
         }
-        if ( (lastStatus.packet_rx_drop_count != status.packet_rx_drop_count) && debug )
+        if ( (lastStatus.packet_rx_drop_count != status.packet_rx_drop_count) && debug)
         {
             printf("ERROR: DROPPED %d PACKETS\n", status.packet_rx_drop_count);
             unsigned char v=cp;
-            fprintf(stderr,"%02x ", v);
+            fprintf(stderr,"%02x \n", v);
         }
         lastStatus = status;
     }

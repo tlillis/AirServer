@@ -1,4 +1,5 @@
 #include "../include/threads.h"
+#include "../include/initialization.h"
 
 #include <fstream>
 #include <iostream>
@@ -9,25 +10,62 @@ void AutopilotSerialThread::run() {
 
     Serial_Port serial_port(port, _baud);
 
+    int len = 0;
+
     try {
         serial_port.start();
 
-        while(true) {
+        while(*_use) {
 
             if (serial_port.status == 1) {
-                serial_port.read_message(message);
+                len = serial_port.read_message(message);
             }
             else {
                 break;
             }
-            _lock->lock(); //acquire lock
-            _collector->push(message);
-            _lock->unlock();  //release lock
+            if (len) {
+                _lock_received->lock(); //acquire lock
+                _received->push(message);
+                _lock_received->unlock();  //release lock
+            }
         }
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << std::endl;
     }
+    std::cout << "AutopilotSerialThread: CLOSED" << std::endl;
+};
+
+void TeensySerialThread::run() {
+    mavlink_message_t message;
+    char * port = (char*)_file.c_str();
+
+    Serial_Port serial_port(port, _baud);
+
+    int len = 0;
+
+    try {
+        serial_port.start();
+
+        while(*_use) {
+
+            if (serial_port.status == 1) {
+                len = serial_port.read_message(message);
+            }
+            else {
+                break;
+            }
+            if (len) {
+                _lock_received->lock(); //acquire lock
+                _received->push(message);
+                _lock_received->unlock();  //release lock
+            }
+        }
+    }
+    catch (std::exception& e) {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+    std::cout << "TeensySerialThread: CLOSED" << std::endl;
 };
 
 void WebSocketThread::run() {
@@ -40,13 +78,16 @@ void WebSocketThread::run() {
 
     WebSocket* psock = new WebSocket(cs, request, response);
 
+    psock->setReceiveTimeout(50);
+    psock->setSendTimeout(50);
+
     int rlen = 0;
     int len = 0;
     int flags = 0;
 
-    while(true) {
+    while(*_use) {
 
-        _lock->lock();
+        _lock_tosend->lock();
         if(!_tosend->empty()) {
             try {
 
@@ -58,7 +99,7 @@ void WebSocketThread::run() {
 
             rlen = psock->receiveFrame(receiveBuff,len,flags);
 
-            if(rlen > 0) std::cout << receiveBuff << std::endl;
+            if(rlen > 0) std::cout << "Got WebSocket message: " << receiveBuff << std::endl;
 
             _tosend->pop();
 
@@ -70,9 +111,10 @@ void WebSocketThread::run() {
         } else {
 
         }
-        _lock->unlock();
+        _lock_tosend->unlock();
     }
     psock->close();
+    std::cout << "WebSocketThread: CLOSED" << std::endl;
 };
 
 void UDPThread::run() {
@@ -84,9 +126,9 @@ void UDPThread::run() {
     uint8_t buffer[2041];
     int len;
 
-    while(true) {
+    while(*_use) {
 
-        _lock->lock();
+        _lock_tosend->lock();
         if(!_tosend->empty()) {
             try {
                 message = _tosend->front();
@@ -104,25 +146,31 @@ void UDPThread::run() {
         } else {
 
         }
-        _lock->unlock();
+        _lock_tosend->unlock();
     }
-
+    std::cout << "UDPThread: CLOSED" << std::endl;
 };
 
 void MessageLoggingThread::run() {
     std::ofstream message_file;
-    message_file.open (_address.c_str());
+    message_file.open (_address.c_str(), std::ios::out);
 
     char * message;
 
-    while (true) {
+    int count = 0;
+
+    while (*_use) {
         _lock->lock();
         if(!_tolog->empty()) {
             try {
                 message = _tolog->front();
 
                 if (message_file.is_open()) {
-                    message_file << message << std::endl;
+                    message_file << count << " : " << message << std::endl;
+                    std::cout << "WRITTEN TO FILE: " << count << " : " << message <<std::endl;
+                    sleep(.005);
+                    message_file.flush();
+                    count++;
                 }
 
                 _tolog->pop();
@@ -133,7 +181,6 @@ void MessageLoggingThread::run() {
         }
         _lock->unlock();
     }
-
     message_file.close();
-
+    std::cout << "MessageLoggingThread: CLOSED" << std::endl;
 };

@@ -8,29 +8,60 @@
 #include "../include/conversions.h"
 #include "../include/initialization.h"
 
+#include <ctime>
+#include <signal.h>
+
 using namespace std;
+
+Initialization ini;
+
+Poco::ThreadPool pool;
+
+int counter = 0;
+
+pid_t pid = 0;
+
+void intHandler(int dummy) {
+    if(pid == 0) {
+        sleep(1);
+    }
+    if(pid > 0) {
+        ini.end(); //Ends all threads
+        sleep(1);
+    }
+    //pool.joinAll();
+    cout << "Total Messages Handled:" << counter << endl;
+    exit(0);
+}
 
 int main() {
     cout << "Starting AirServer..." << endl << endl;
 
-    //load ini file
-    Initialization ini;
+    signal(SIGINT, intHandler);
+
+    // Load ini file
+    //Initialization ini;
     if(ini.load()) {
         cout << "Unable to load configuration file." << endl;
         return 0;
     }
     ini.print();
 
-    //Set up sitl
+    // Set up sitl
     if(ini.autopilot_sitl) {
         cout << "Setting up SITL connection..." << endl;
-        pid_t pid = fork();
+        pid = fork();
         if (pid == 0) {
-            system("xterm -e \"./sitl.sh\"");
+            //Not calling to system() because system() forks a process and won't quit with SIGINT
+            execl("/bin/sh"
+                , "sh"
+                ,"-c"
+                , "xterm -e \"socat -d -d UDP-LISTEN:14550 pty,raw,echo=0,link=/tmp/ttyV0\""
+                ,(char *) 0);
             return 0;
         }
         if (pid > 0) {
-            sleep(1); //Wait for SITL to be setup. May need to be longer
+            sleep(1); // Wait for SITL to be setup. May need to be longer
         }
         else {
             cout << "fork() failed!" << endl;
@@ -38,64 +69,74 @@ int main() {
         }
     }
 
-    //Create a queues for getting data between threads
-    queue <mavlink_message_t> msg_queue_received;
-    queue <mavlink_message_t> msg_queue_udp;
-    queue <char *> msg_queue_socket;
-    queue <char *> msg_queue_logging;
+    // Create a queues for getting data between threads
+    queue <mavlink_message_t> msg_queue_main_tosend; // Main queue of msgs to send out
+    queue <mavlink_message_t> msg_queue_udp_tosend; // Queue of udp messages to send out
+    queue <char *> msg_queue_websocket_tosend; // Queue of udp messages to send out
+    queue <char *> msg_queue_logging; // Queue of messages to be saved to file
 
-    Poco::Mutex lock_serial;
-    Poco::Mutex lock_socket;
-    Poco::Mutex lock_udp;
+    queue <mavlink_message_t> msg_queue_received; // Queue of msgs received
+
+    Poco::Mutex lock_main_tosend;
+    Poco::Mutex lock_websocket_tosend;
+    Poco::Mutex lock_udp_tosend;
+    Poco::Mutex lock_teensy_tosend;
     Poco::Mutex lock_messagelogging;
 
-    AutopilotSerialThread autopilot_thread(1, &lock_serial, &msg_queue_received, ini.autopilot_file, ini.autopilot_baud);
-    WebSocketThread websocket_thread(2, &lock_socket, &msg_queue_socket, ini.websocket_address, ini.websocket_port);
-    UDPThread udp_thread(3, &lock_udp, &msg_queue_udp,ini.udp_address, ini.udp_port);
-    MessageLoggingThread messagelogging_thread(4, &lock_messagelogging, &msg_queue_logging, ini.logging_messages);
+    Poco::Mutex lock_main_received;
 
-    Poco::ThreadPool pool;
+    AutopilotSerialThread autopilot_thread(1, &lock_main_tosend, &lock_main_received, &msg_queue_main_tosend, &msg_queue_received,
+                                                ini.autopilot_file, ini.autopilot_baud, &ini.autopilot_use);
+    TeensySerialThread teensy_thread(1, &lock_main_tosend,&lock_teensy_tosend, &msg_queue_main_tosend, &msg_queue_received,
+                                                ini.teensy_file, ini.teensy_baud, &ini.teensy_use);
+    WebSocketThread websocket_thread(3, &lock_websocket_tosend, &lock_main_received, &msg_queue_websocket_tosend, &msg_queue_received,
+                                                ini.websocket_address, ini.websocket_port, &ini.websocket_use);
+    UDPThread udp_thread(4, &lock_udp_tosend, &lock_main_received, &msg_queue_udp_tosend, &msg_queue_received,
+                                                ini.udp_address, ini.udp_port, &ini.udp_use);
+    MessageLoggingThread messagelogging_thread(5, &lock_messagelogging, &msg_queue_logging,
+                                                ini.logging_messages, &ini.logging_use);
+
     pool.start(autopilot_thread);
+    pool.start(teensy_thread);
     pool.start(websocket_thread);
     pool.start(udp_thread);
     pool.start(messagelogging_thread);
 
+    //pool.collect();
+    //cout << "Allocated Threads: " << pool.allocated() << endl;
+    //cout << "Used Threads: " << pool.used() << endl;
+
     mavlink_message_t message_mav;
     char message_json [256];
 
-    int previous_id = -1;
-
     cout << "Waiting for first data from devices..." << endl;
-    while(msg_queue_received.empty()) {
+    while(msg_queue_main_tosend.empty()) {
     }
 
-    cout << "Starting main loop..." << endl;
+    cout << "Starting main loop..." << endl << endl;
     while(true) {
-        lock_serial.lock();
-        if(!msg_queue_received.empty()) {
-            message_mav = msg_queue_received.front();
-            msg_queue_received.pop();
+        lock_main_tosend.lock();
+        if(!msg_queue_main_tosend.empty()) {
+            message_mav = msg_queue_main_tosend.front();
+            msg_queue_main_tosend.pop();
 
-            lock_udp.lock();
-            msg_queue_udp.push(message_mav);
-            lock_udp.unlock();
+            lock_udp_tosend.lock();
+            msg_queue_udp_tosend.push(message_mav);
+            lock_udp_tosend.unlock();
 
-            if(message_mav.msgid != previous_id) { //To remove duplicates. May not be wanted
+            mav_to_json(message_mav,message_json);
 
-                mav_to_json(message_mav,message_json);
+            lock_messagelogging.lock();
+            msg_queue_logging.push(message_json);
+            lock_messagelogging.unlock();
 
-                lock_messagelogging.lock();
-                msg_queue_logging.push(message_json);
-                lock_messagelogging.unlock();
+            lock_websocket_tosend.lock();
+            msg_queue_websocket_tosend.push(message_json);
+            lock_websocket_tosend.unlock();
 
-                lock_socket.lock();
-                msg_queue_socket.push(message_json);
-                lock_socket.unlock();
-
-                previous_id = message_mav.msgid;
-            }
+            counter++;
         }
-        lock_serial.unlock();
+        lock_main_tosend.unlock();
     }
 
     pool.joinAll();

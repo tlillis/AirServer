@@ -9,21 +9,26 @@ int Initialization::load() {
     try {
         AutoPtr<IniFileConfiguration> pConf(new IniFileConfiguration("airserver.ini"));
 
+        autopilot_use = pConf->getInt("autopilot.use");
         autopilot_type = pConf->getString("autopilot.type");
         autopilot_file = pConf->getString("autopilot.file");
         autopilot_baud = pConf->getInt("autopilot.baud");
         autopilot_sitl = pConf->getInt("autopilot.sitl");
 
+        teensy_use = pConf->getInt("teensy.use");
         teensy_file = pConf->getString("teensy.file");
         teensy_baud = pConf->getInt("teensy.baud");
         teensy_imu = pConf->getInt("teensy.imu");
 
+        websocket_use = pConf->getInt("websocket.use");
         websocket_address = pConf->getString("websocket.address");
         websocket_port = pConf->getInt("websocket.port");
 
+        udp_use = pConf->getInt("udp.use");
         udp_address = pConf->getString("udp.address");
         udp_port = pConf->getInt("udp.port");
 
+        logging_use = pConf->getInt("logging.use");
         logging_messages = pConf->getString("logging.messages");
         logging_errors = pConf->getString("logging.errors");
     }
@@ -65,3 +70,10 @@ void Initialization::print() {
     return;
 };
 
+void Initialization::end() {
+    websocket_use = 0;
+    teensy_use = 0;
+    autopilot_use = 0;
+    udp_use = 0;
+    logging_use = 0;
+}

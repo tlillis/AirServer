@@ -3,6 +3,7 @@
 int mav_to_json(mavlink_message_t &message,char *json_buffer)
 {
     int msgid = message.msgid;
+    int sysid = message.sysid;
 
     // Handle Message ID
     switch (msgid)
@@ -16,8 +17,8 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_HEARTBEAT\n");
             mavlink_msg_heartbeat_decode(&message, &(heartbeat));
 
-            if(sprintf(json_buffer,"{\"HRT\":{\"type\":%i,\"autoPilot\":%i,\"baseMode\":%i}}",
-                                    heartbeat.type,heartbeat.autopilot,heartbeat.base_mode) < 0) return -1;
+            if(sprintf(json_buffer,"{\"HRT\":{\"systemID\":%i,\"type\":%i,\"autoPilot\":%i,\"baseMode\":%i}}",
+                                    sysid,heartbeat.type,heartbeat.autopilot,heartbeat.base_mode) < 0) return -1;
             return 0;
         }
 
@@ -29,9 +30,9 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_SYS_STATUS\n");
             mavlink_msg_sys_status_decode(&message, &(sys_status));
 
-            if(sprintf(json_buffer,"{\"STA\":{\"controlSensors\":%i,\"enabled\":%i,\"health\":%i,"
+            if(sprintf(json_buffer,"{\"STA\":{\"systemID\":%i,\"controlSensors\":%i,\"enabled\":%i,\"health\":%i,"
                             "\"load\":%i,\"voltage\":%i,\"current\":%i,\"remaining\":%i,"
-                            "\"comDrops\":%i,\"comErrors\":%i}}",
+                            "\"comDrops\":%i,\"comErrors\":%i}}",sysid,
                             sys_status.onboard_control_sensors_present,
                             sys_status.onboard_control_sensors_enabled,
                             sys_status.onboard_control_sensors_health,
@@ -73,7 +74,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_LOCAL_POSITION_NED\n");
             mavlink_msg_local_position_ned_decode(&message, &(local_position_ned));
 
-            if(sprintf(json_buffer,"{\"NED\":{\"nedX\":%f,\"nedY\":%f,\"nedZ\":%f}}",
+            if(sprintf(json_buffer,"{\"NED\":{\"systemID\":%i,\"nedX\":%f,\"nedY\":%f,\"nedZ\":%f}}",sysid,
                                         local_position_ned.x, local_position_ned.y,
                                         local_position_ned.z ) < 0) return -1;
             return 0;
@@ -87,8 +88,8 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_GLOBAL_POSITION_INT\n");
             mavlink_msg_global_position_int_decode(&message, &(global_position_int));
 
-            if(sprintf(json_buffer,"{\"GPS\":{\"time\":%i,\"lat\":%i,\"lon\":%i,\"alt\":%i,\"relAlt\":%i,"
-                                        "\"velX\":%i,\"velY\":%i,\"velZ\":%i}}",
+            if(sprintf(json_buffer,"{\"GPS\":{\"systemID\":%i,\"time\":%i,\"lat\":%i,\"lon\":%i,\"alt\":%i,\"relAlt\":%i,"
+                                        "\"velX\":%i,\"velY\":%i,\"velZ\":%i}}",sysid,
                                         global_position_int.time_boot_ms,global_position_int.lat,
                                         global_position_int.lon, global_position_int.alt,
                                         global_position_int.relative_alt,global_position_int.vx,
@@ -126,10 +127,10 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_HIGHRES_IMU\n");
             mavlink_msg_highres_imu_decode(&message, &(imu));
 
-            if(sprintf(json_buffer,"{\"IMH\":{\"time\":%lu,\"accX\":%f,\"accY\":%f,\"accZ\":%f,"
+            if(sprintf(json_buffer,"{\"IMH\":{\"systemID\":%i,\"time\":%lu,\"accX\":%f,\"accY\":%f,\"accZ\":%f,"
                                         "\"gyroX\":%f,\"gyroY\":%f,\"gyrcoZ\":%f,"
                                         "\"magX\":%f,\"magY\":%f,\"magZ\":%f,"
-                                        "\"baro\":%f,\"alt\":%f,\"temp\":%f}}",
+                                        "\"baro\":%f,\"alt\":%f,\"temp\":%f}}",sysid,
                                         imu.time_usec,imu.xacc,imu.yacc,imu.zacc,
                                         imu.xgyro,imu.ygyro,imu.zgyro,
                                         imu.xmag,imu.ymag,imu.zmag,
@@ -147,8 +148,8 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_ATTITUDE\n");
             mavlink_msg_attitude_decode(&message, &(attitude));
 
-            if(sprintf(json_buffer,"{\"ATT\":{\"time\":%i,\"roll\":%f,\"pitch\":%f,\"yaw\":%f,"
-                                        "\"rollSpeed\":%f,\"pitchSpeed\":%f,\"yawSpeed\":%f}}",
+            if(sprintf(json_buffer,"{\"ATT\":{\"systemID\":%i,\"time\":%i,\"roll\":%f,\"pitch\":%f,\"yaw\":%f,"
+                                        "\"rollSpeed\":%f,\"pitchSpeed\":%f,\"yawSpeed\":%f}}",sysid,
                                         attitude.time_boot_ms,attitude.roll,attitude.pitch,attitude.yaw,
                                         attitude.rollspeed,attitude.pitchspeed,
                                         attitude.yawspeed) < 0) return -1;
@@ -164,9 +165,9 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_RC_CHANNELS_RAW\n");
             mavlink_msg_rc_channels_raw_decode(&message, &(channels));
 
-            if(sprintf(json_buffer,"{\"RCR\":{\"time\":%i,\"port\":%i,\"chan1\":%i,\"chan2\":%i,"
+            if(sprintf(json_buffer,"{\"RCR\":{\"systemID\":%i,\"time\":%i,\"port\":%i,\"chan1\":%i,\"chan2\":%i,"
                                         "\"chan3\":%i,\"chan4\":%i,\"chan5\":%i,\"chan6\":%i,"
-                                        "\"chan7\":%i,\"chan8\":%i}}",
+                                        "\"chan7\":%i,\"chan8\":%i}}",sysid,
                                         channels.time_boot_ms,channels.port,channels.chan1_raw,
                                         channels.chan2_raw,channels.chan3_raw,channels.chan4_raw,
                                         channels.chan5_raw,channels.chan6_raw,channels.chan7_raw,
@@ -182,9 +183,9 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_TERRAIN_REPORT\n");
             mavlink_msg_terrain_report_decode(&message, &(terrain));
 
-            if(sprintf(json_buffer,"{\"TER\":{\"lat\":%i,\"lon\":%i,"
+            if(sprintf(json_buffer,"{\"TER\":{\"systemID\":%i,\"lat\":%i,\"lon\":%i,"
                                         "\"spacing\":%i,\"terrainHeight\":%f,\"currentHeight\":%f,"
-                                        "\"pending\":%i,\"loaded\":%i}}",
+                                        "\"pending\":%i,\"loaded\":%i}}",sysid,
                                         terrain.lat,terrain.lon,terrain.spacing,terrain.terrain_height,
                                         terrain.current_height,terrain.pending,
                                         terrain.loaded) < 0) return -1;
@@ -199,9 +200,9 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_SERVO_OUTPUT_RAW\n");
             mavlink_msg_servo_output_raw_decode(&message, &(servo));
 
-            if(sprintf(json_buffer,"{\"SOR\":{\"time\":%i,\"port\":%i,"
+            if(sprintf(json_buffer,"{\"SOR\":{\"systemID\":%i,\"time\":%i,\"port\":%i,"
                                         "\"servo1\":%i,\"servo2\":%i,\"servo3\":%i,\"servo4\":%i,"
-                                        "\"servo5\":%i,\"servo6\":%i,\"servo7\":%i,\"servo8\":%i}}",
+                                        "\"servo5\":%i,\"servo6\":%i,\"servo7\":%i,\"servo8\":%i}}",sysid,
                                         servo.time_usec,servo.port,servo.servo1_raw,servo.servo2_raw,
                                         servo.servo3_raw,servo.servo4_raw,servo.servo5_raw,
                                         servo.servo6_raw,servo.servo7_raw,servo.servo8_raw) < 0) return -1;
@@ -216,7 +217,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_MISSION_CURRENT\n");
             mavlink_msg_mission_current_decode(&message, &(mission_current));
 
-            if(sprintf(json_buffer,"{\"MIC\":{\"seq\":%i}}",mission_current.seq) < 0) return -1;
+            if(sprintf(json_buffer,"{\"MIC\":{\"systemID\":%i,\"seq\":%i}}",sysid,mission_current.seq) < 0) return -1;
             return 0;
         }
 
@@ -228,7 +229,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_SYSTEM_TIME\n");
             mavlink_msg_system_time_decode(&message, &(time));
 
-            if(sprintf(json_buffer,"{\"TIM\":{\"master\":%lld,\"component\":%i}}",
+            if(sprintf(json_buffer,"{\"TIM\":{\"systemID\":%i,\"master\":%lld,\"component\":%i}}",sysid,
                                         (long long)time.time_unix_usec,time.time_boot_ms) < 0) return -1;
             return 0;
         }
@@ -241,8 +242,8 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_SCALED_PRESSURE\n");
             mavlink_msg_scaled_pressure_decode(&message, &(pressure));
 
-            if(sprintf(json_buffer,"{\"PRE\":{\"time\":%i,\"absolute\":%f,"
-                                        "\"differential\":%f,\"temperature\":%i}}",
+            if(sprintf(json_buffer,"{\"PRE\":{\"systemID\":%i,\"time\":%i,\"absolute\":%f,"
+                                        "\"differential\":%f,\"temperature\":%i}}",sysid,
                                        pressure.time_boot_ms,pressure.press_abs,pressure.press_diff,
                                        pressure.temperature) < 0) return -1;
             return 0;
@@ -256,9 +257,9 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_SCALED_IMU2\n");
             mavlink_msg_scaled_imu2_decode(&message, &(imu2));
 
-            if(sprintf(json_buffer,"{\"IM2\":{\"time\":%i,\"accX\":%i,\"accY\":%i,\"accZ\":%i,"
+            if(sprintf(json_buffer,"{\"IM2\":{\"systemID\":%i,\"time\":%i,\"accX\":%i,\"accY\":%i,\"accZ\":%i,"
                                         "\"gyroX\":%i,\"gyroY\":%i,\"gyroZ\":%i,"
-                                        "\"magX\":%i,\"magY\":%i,\"magZ\":%i}}",
+                                        "\"magX\":%i,\"magY\":%i,\"magZ\":%i}}",sysid,
                                         imu2.time_boot_ms,imu2.xacc,imu2.yacc,imu2.zacc,
                                         imu2.xgyro,imu2.ygyro,imu2.zgyro,
                                         imu2.xmag,imu2.ymag,imu2.zmag) < 0) return -1;
@@ -274,10 +275,10 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_GPS_RAW_INT\n");
             mavlink_msg_gps_raw_int_decode(&message, &(gps_raw));
 
-            if(sprintf(json_buffer,"{\"GPR\":{\"time\":%lld,\"fixType\":%i,"
+            if(sprintf(json_buffer,"{\"GPR\":{\"systemID\":%i,\"time\":%lld,\"fixType\":%i,"
                                         "\"lat\":%i,\"lon\":%i,\"alt\":%i,"
                                         "\"ehp\":%i,\"epv\":%i,\"velocity\":%i,\"cog\":%i,"
-                                        "\"satellites\":%i}}",
+                                        "\"satellites\":%i}}",sysid,
                                         (long long)gps_raw.time_usec,gps_raw.fix_type,
                                         gps_raw.lat,gps_raw.lon,gps_raw.alt,
                                         gps_raw.eph,gps_raw.epv,gps_raw.vel,gps_raw.cog,
@@ -293,9 +294,9 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_RAW_IMU\n");
             mavlink_msg_raw_imu_decode(&message, &(imu_raw));
 
-            if(sprintf(json_buffer,"{\"IMU\":{\"time\":%lld,\"accX\":%i,\"accY\":%i,\"accZ\":%i,"
+            if(sprintf(json_buffer,"{\"IMU\":{\"systemID\":%i,\"time\":%lld,\"accX\":%i,\"accY\":%i,\"accZ\":%i,"
                                         "\"gyroX\":%i,\"gyroY\":%i,\"gyroZ\":%i,"
-                                        "\"magX\":%i,\"magY\":%i,\"magZ\":%i}}",
+                                        "\"magX\":%i,\"magY\":%i,\"magZ\":%i}}",sysid,
                                         (long long)imu_raw.time_usec,imu_raw.xacc,imu_raw.yacc,imu_raw.zacc,
                                         imu_raw.xgyro,imu_raw.ygyro,imu_raw.zgyro,
                                         imu_raw.xmag,imu_raw.ymag,imu_raw.zmag) < 0) return -1;
@@ -310,8 +311,8 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             //printf("MAVLINK_MSG_ID_VFR_HUD\n");
             mavlink_msg_vfr_hud_decode(&message, &(vfr));
 
-            if(sprintf(json_buffer,"{\"VFR\":{\"airspeed\":%f,\"groundspeed\":%f,\"heading\":%i,"
-                                        "\"throttle\":%i,\"alt\":%f,\"climb\":%f}}",
+            if(sprintf(json_buffer,"{\"VFR\":{\"systemID\":%i,\"airspeed\":%f,\"groundspeed\":%f,\"heading\":%i,"
+                                        "\"throttle\":%i,\"alt\":%f,\"climb\":%f}}",sysid,
                                         vfr.airspeed,vfr.groundspeed,vfr.heading,vfr.throttle,
                                         vfr.alt,vfr.climb) < 0) return -1;
             return 0;
@@ -319,7 +320,7 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
 
         default:
         {
-            sprintf(json_buffer,"{\"ERR\":{\"msgID\":%i}}",msgid);
+            sprintf(json_buffer,"{\"ERR\":{\"systemID\":%i,\"msgID\":%i}}",sysid,msgid);
             return -1;
         }
     }

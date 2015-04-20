@@ -5,8 +5,8 @@ LIBS = -lPocoFoundation -lPocoNet -lPocoUtil -lPocoXML -lpthread
 SOURCES := \
 	$(wildcard src/*.cpp)
 PROGRAM = airserver
+IOTEST = iotest
 all:
 	$(CXX) $(CXXFLAGS) -o $(PROGRAM) $(SOURCES) $(LIBS)
-	chmod +x sitl.sh
 clean:
-	rm $(PROGRAM)
+	rm -rf *.o $(PROGRAM)

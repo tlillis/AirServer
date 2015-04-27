@@ -120,21 +120,36 @@ int main() {
             message_mav = msg_queue_main_tosend.front();
             msg_queue_main_tosend.pop();
 
-            lock_udp_tosend.lock();
-            msg_queue_udp_tosend.push(message_mav);
-            lock_udp_tosend.unlock();
+            if(ini.udp_use) {
+                lock_udp_tosend.lock();
+                msg_queue_udp_tosend.push(message_mav);
+                //std::cout << "size udp: " << msg_queue_udp_tosend.size() <<std::endl;
+                lock_udp_tosend.unlock();
+            }
 
-            mav_to_json(message_mav,message_json);
+            if(ini.websocket_use || ini.websocket_use) {
 
-            lock_messagelogging.lock();
-            msg_queue_logging.push(message_json);
-            lock_messagelogging.unlock();
+                mav_to_json(message_mav,message_json);
 
-            lock_websocket_tosend.lock();
-            msg_queue_websocket_tosend.push(message_json);
-            lock_websocket_tosend.unlock();
+                if(ini.logging_use) {
+                    lock_messagelogging.lock();
+                    msg_queue_logging.push(message_json);
+                    //std::cout << "size logging: " << msg_queue_logging.size() <<std::endl;
+                    lock_messagelogging.unlock();
+                }
+
+                if(ini.websocket_use) {
+                    lock_websocket_tosend.lock();
+                    msg_queue_websocket_tosend.push(message_json);
+                    //std::cout << "size websocket: " << msg_queue_websocket_tosend.size() <<std::endl;
+                    lock_websocket_tosend.unlock();
+                }
+            }
+
+            //std::cout << "size main: " << msg_queue_main_tosend.size() <<std::endl;
 
             counter++;
+            usleep(5000);
         }
         lock_main_tosend.unlock();
     }

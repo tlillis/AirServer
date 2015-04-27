@@ -318,6 +318,21 @@ int mav_to_json(mavlink_message_t &message,char *json_buffer)
             return 0;
         }
 
+        case MAVLINK_MSG_ID_NCAR_PTH:
+        {
+            // NCAR_PTH (200)
+            mavlink_ncar_pth_t pth;
+
+            //printf("MAVLINK_MSG_ID_VFR_HUD\n");
+            mavlink_msg_ncar_pth_decode(&message, &(pth));
+
+            if(sprintf(json_buffer,"{\"PTH\":{\"systemID\":%i,\"time\":%lu,\"sampleNum\":%i,\"pressure\":%f,"
+                                        "\"externalTemp\":%f,\"RH1\":%f,\"RH1\":%f,\"internalTemp\":%f}}",sysid,
+                                        pth.time_usec,pth.sample_num,pth.pressure,pth.external_temp,
+                                        pth.rh1,pth.rh2,pth.internal_temp) < 0) return -1;
+            return 0;
+        }
+
         default:
         {
             sprintf(json_buffer,"{\"ERR\":{\"systemID\":%i,\"msgID\":%i}}",sysid,msgid);

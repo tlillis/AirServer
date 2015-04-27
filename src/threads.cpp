@@ -28,6 +28,7 @@ void AutopilotSerialThread::run() {
                 _received->push(message);
                 _lock_received->unlock();  //release lock
             }
+            usleep(100);
         }
     }
     catch (std::exception& e) {
@@ -60,6 +61,7 @@ void TeensySerialThread::run() {
                 _received->push(message);
                 _lock_received->unlock();  //release lock
             }
+            usleep(100);
         }
     }
     catch (std::exception& e) {
@@ -78,8 +80,8 @@ void WebSocketThread::run() {
 
     WebSocket* psock = new WebSocket(cs, request, response);
 
-    psock->setReceiveTimeout(50);
-    psock->setSendTimeout(50);
+    //psock->setReceiveTimeout(50);
+    //psock->setSendTimeout(50);
 
     int rlen = 0;
     int len = 0;
@@ -99,7 +101,7 @@ void WebSocketThread::run() {
 
             rlen = psock->receiveFrame(receiveBuff,len,flags);
 
-            if(rlen > 0) std::cout << "Got WebSocket message: " << receiveBuff << std::endl;
+           // if(rlen > 0) std::cout << "Got WebSocket message: " << receiveBuff << std::endl;
 
             _tosend->pop();
 
@@ -112,6 +114,7 @@ void WebSocketThread::run() {
 
         }
         _lock_tosend->unlock();
+        usleep(5000);
     }
     psock->close();
     std::cout << "WebSocketThread: CLOSED" << std::endl;
@@ -147,6 +150,7 @@ void UDPThread::run() {
 
         }
         _lock_tosend->unlock();
+        usleep(5000);
     }
     std::cout << "UDPThread: CLOSED" << std::endl;
 };
@@ -166,9 +170,9 @@ void MessageLoggingThread::run() {
                 message = _tolog->front();
 
                 if (message_file.is_open()) {
-                    message_file << count << " : " << message << std::endl;
-                    std::cout << "WRITTEN TO FILE: " << count << " : " << message <<std::endl;
-                    sleep(.005);
+                    message_file << message << std::endl;
+                    //std::cout << "WRITTEN TO FILE: " << count << " : " << message <<std::endl;
+                    //std::cout << "size: " << _tolog->size() <<std::endl;
                     message_file.flush();
                     count++;
                 }
@@ -180,6 +184,7 @@ void MessageLoggingThread::run() {
             }
         }
         _lock->unlock();
+        usleep(5000);
     }
     message_file.close();
     std::cout << "MessageLoggingThread: CLOSED" << std::endl;

@@ -68,7 +68,8 @@ float rh2 = 0;
 float internalTemp = 0;
 
 int fieldNo = 0;
-String field;
+char field[16];
+int fieldIndex = 0;
 
 char incomingByte;
 
@@ -97,7 +98,7 @@ void loop() {
     len = mavlink_msg_to_send_buffer(buf, &msg_imu);
 	
     // Send the message (.write sends as bytes) 
-    Serial.write(buf, len);
+    //Serial.write(buf, len);
     
     if (Serial1.available() > 0) {
         incomingByte = Serial1.read();
@@ -107,22 +108,23 @@ void loop() {
           case '\t': //end of field
             switch(fieldNo) { //Depending on the field give to different variable
               case 0:
-                sampleNo = field.toInt();
+                sampleNo = atoll(field);
               case 1:
-                pressure = field.toFloat();
+                pressure = atof(field);
               case 2:
-                externalTemp = field.toFloat();
+                externalTemp = atof(field);
               case 3:
-                rh1 = field.toFloat();
+                rh1 = atof(field);
               case 4:
-                rh2 = field.toFloat(); 
+                rh2 = atof(field); 
             }
             fieldNo++;
-            field.remove(0); //empty for next variable read
+            fieldIndex = 0;
+            field[0] = '\0'; //empty for next variable read
             break;
             
           case '\n': //Handle end of input line
-            internalTemp = field.toFloat(); //handle last variable
+            internalTemp = atof(field); //handle last variable
             
             //Prepare mavlink
             mavlink_msg_ncar_pth_pack(0, 0, &msg_pth, 0, sampleNo, pressure, externalTemp,rh1,rh2,internalTemp);
@@ -132,14 +134,16 @@ void loop() {
             
             //reset everything for next line
             fieldNo = 0;
-            field.remove(0);
+            field[0] = '\0';
+            fieldIndex = 0;
             break;
             
           case 0://Handle NULL char
             break;
             
           default: //append lastest byte to field
-            field += incomingByte;
+            field[fieldIndex] = incomingByte;
+            fieldIndex++;
         }
     }
     //delay(500);

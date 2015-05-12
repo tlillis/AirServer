@@ -110,7 +110,7 @@ initialize_defaults()
 // ------------------------------------------------------------------------------
 int
 Serial_Port::
-read_message(mavlink_message_t &message)
+read_message_mavlink(mavlink_message_t &message)
 {
     uint8_t          cp;
     mavlink_status_t status;
@@ -186,12 +186,40 @@ read_message(mavlink_message_t &message)
     return msgReceived;
 }
 
+int
+Serial_Port::
+read_message_raw(char &buf)
+{
+    uint8_t          cp;
+    uint8_t          success = false;
+
+    // --------------------------------------------------------------------------
+    //   READ FROM PORT
+    // --------------------------------------------------------------------------
+
+    // this function locks the port during read
+    int result = _read_port(cp);
+    if (result > 0)
+    {
+        success = true;
+        buf = cp;
+    }
+
+    // Couldn't read from port
+    else
+    {
+        fprintf(stderr, "ERROR: Could not read from fd %d\n", fd);
+    }
+    // Done!
+    return success;
+}
+
 // ------------------------------------------------------------------------------
 //   Write to Serial
 // ------------------------------------------------------------------------------
 int
 Serial_Port::
-write_message(mavlink_message_t &message)
+write_message_mavlink(mavlink_message_t &message)
 {
     char buf[300];
 
@@ -204,6 +232,15 @@ write_message(mavlink_message_t &message)
     return len;
 }
 
+int
+Serial_Port::
+write_message_raw(char *buf, unsigned len)
+{
+    // Write buffer to serial port, locks port while writing
+    _write_port(buf,len);
+
+    return len;
+}
 
 // ------------------------------------------------------------------------------
 //   Open Serial Port

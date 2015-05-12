@@ -18,7 +18,7 @@ void AutopilotSerialThread::run() {
         while(*_use) {
 
             if (serial_port.status == 1) {
-                len = serial_port.read_message(message);
+                len = serial_port.read_message_mavlink(message);
             }
             else {
                 break;
@@ -51,7 +51,7 @@ void TeensySerialThread::run() {
         while(*_use) {
 
             if (serial_port.status == 1) {
-                len = serial_port.read_message(message);
+                len = serial_port.read_message_mavlink(message);
             }
             else {
                 break;
@@ -101,7 +101,7 @@ void WebSocketThread::run() {
 
             rlen = psock->receiveFrame(receiveBuff,len,flags);
 
-           // if(rlen > 0) std::cout << "Got WebSocket message: " << receiveBuff << std::endl;
+            if(rlen > 0) std::cout << "Got WebSocket message: " << receiveBuff << std::endl;
 
             _tosend->pop();
 

@@ -121,8 +121,10 @@ public:
     int  baudrate;
     int  status;
 
-    int read_message(mavlink_message_t &message);
-    int	write_message(mavlink_message_t &message);
+    int read_message_mavlink(mavlink_message_t &message);
+    int read_message_raw(char &buf);
+    int	write_message_mavlink(mavlink_message_t &message);
+    int write_message_raw(char *buf, unsigned len);
 
     void open_serial();
     void close_serial();

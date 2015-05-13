@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 void AutopilotSerialThread::run() {
     mavlink_message_t message;
@@ -156,8 +157,22 @@ void UDPThread::run() {
 };
 
 void MessageLoggingThread::run() {
+    //Check to make new file
+    int file_tag = 0;
+    std::ostringstream oss;
+
+    oss << file_tag << "-" << _address;
+    std::cout << oss << std::endl;
+    while (std::ifstream(oss.str().c_str())) {
+        file_tag++;
+        oss.str("");
+        oss.clear();
+        oss << file_tag << "-" << _address;
+        std::cout << oss.str() << std::endl;
+    }
+
     std::ofstream message_file;
-    message_file.open (_address.c_str(), std::ios::out);
+    message_file.open (oss.str().c_str(), std::ios::out);
 
     char * message;
 

@@ -29,7 +29,15 @@ void AutopilotSerialThread::run() {
                 _received->push(message);
                 _lock_received->unlock();  //release lock
             }
+            
             usleep(100);
+
+            lock_tosend->lock();
+            if(!_tosend->empty()) {
+                serial_port->write_message_mavlink(_tosend->front());
+                _tosend->pop();
+            }
+            lock_tosend->unlock();
         }
     }
     catch (std::exception& e) {
@@ -127,8 +135,10 @@ void UDPThread::run() {
     dgs.connect(sa);
 
     mavlink_message_t message;
+    mavlink_status_t status;
     uint8_t buffer[2041];
-    int len;
+    uint8_t receivedByte;
+    int len = 0;
 
     while(*_use) {
 
@@ -151,6 +161,15 @@ void UDPThread::run() {
 
         }
         _lock_tosend->unlock();
+
+        dgs.receiveBytes(&receivedByte, 1);
+
+        if(mavlink_parse_char(MAVLINK_COMM_2, receivedByte, &message, &status)) {
+            _lock_received->lock();
+            _received->push(message);
+            _lock_received->lock();
+        }
+
         usleep(5000);
     }
     std::cout << "UDPThread: CLOSED" << std::endl;
@@ -158,19 +177,18 @@ void UDPThread::run() {
 
 void MessageLoggingThread::run() {
     //Check to make new file
-    int file_tag = 0;
+    unsigned int file_tag = 0;
     std::ostringstream oss;
 
     oss << file_tag << "-" << _address;
-    std::cout << oss << std::endl;
-    while (std::ifstream(oss.str().c_str())) {
+    while (std::ifstream(oss.str().c_str())) { //Check if file already exists
         file_tag++;
         oss.str("");
         oss.clear();
         oss << file_tag << "-" << _address;
-        std::cout << oss.str() << std::endl;
     }
 
+    //Open file
     std::ofstream message_file;
     message_file.open (oss.str().c_str(), std::ios::out);
 

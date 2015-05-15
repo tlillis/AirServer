@@ -128,7 +128,7 @@ read_message_mavlink(mavlink_message_t &message)
     if (result > 0)
     {
         // the parsing
-        msgReceived = mavlink_parse_char(MAVLINK_COMM_1, cp, &message, &status);
+        msgReceived = mavlink_parse_char(MAVLINK_COMM_0, cp, &message, &status);
         // check for dropped packets
         if((msgReceived < 1) && (status.packet_rx_drop_count > 0))
         {

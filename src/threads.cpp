@@ -207,6 +207,7 @@ void MessageLoggingThread::run() {
     int count = 0;
 
     while (*_use) {
+
         _lock->lock();
         if(!_tolog->empty()) {
             try {

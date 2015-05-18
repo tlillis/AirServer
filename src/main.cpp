@@ -127,7 +127,7 @@ int main() {
                 lock_udp_tosend.unlock();
             }
 
-            if(ini.websocket_use || ini.websocket_use) {
+            if(ini.websocket_use || ini.logging_use) {
 
                 mav_to_json(message_mav,message_json);
 

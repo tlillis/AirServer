@@ -2,9 +2,12 @@
 #define CONVERSIONS_H
 
 #include "serial_port.h"
+#include <string>
+//#include <sstream>
 
-int mav_to_json(mavlink_message_t &message,char *json_buffer);
 
-int json_to_mav(char * json);
+int mav_to_json(mavlink_message_t &message, std::string &json_message);
+
+int json_to_mav(char * json_message);
 
 #endif // CONVERSIONS

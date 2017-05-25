@@ -1,0 +1,137 @@
+<config>
+	<debug>0</debug>
+	<autopilot>
+		<use>1</use>
+		<debug>0</debug>
+		<file>/dev/ttyACM0</file>
+		<baud>921600</baud>
+		<sitl>0</sitl>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+	</autopilot>
+
+   	<teensy>
+		<use>1</use>
+		<debug>0</debug>
+		<file>/dev/ttyACM1</file>
+		<baud>115200</baud>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+	</teensy>
+
+	<serial_out>
+		<use>0</use>
+		<debug>0</debug>
+		<file>/dev/pts/20</file>
+		<baud>115200</baud>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+	</serial_out>
+
+	<websocket_0>
+		<use>0</use>
+		<debug>0</debug>
+		<address>localhost</address>
+		<port>9000</port>
+		<msg_all>1</msg_all>
+		<msg_set>4</msg_set>
+		<filter>
+			<id>200</id><!--PTH-->
+			<rate>1</rate>
+		</filter>
+		<filter>
+			<id>201</id><!--Vector Nav-->
+			<rate>1</rate>
+		</filter>
+		<filter>
+			<id>202</id><!--AeroProbe-->
+			<rate>1</rate>
+		</filter>
+		<filter>
+			<id>27</id><!--IMU-->
+			<rate>1</rate>
+		</filter>
+	</websocket_0>
+
+	<websocket_1>
+		<use>0</use>
+		<debug>0</debug>
+		<address>localhost</address>
+		<port>9001</port>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+	</websocket_1>
+
+	<websocket_2>
+		<use>0</use>
+		<debug>0</debug>
+		<address>localhost</address>
+		<port>9002</port>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+	</websocket_2>
+
+	<udp_0>
+		<use>0</use>
+		<debug>0</debug>
+		<broadcast>0</broadcast>
+		<address>localhost</address>
+		<bind_port>1025</bind_port>
+		<send_port>1026</send_port>
+		<msg_all>1</msg_all>
+		<msg_set>3</msg_set>
+		<filter>
+			<id>200</id><!--PTH-->
+			<rate>1</rate>
+		</filter>
+		<filter>
+			<id>201</id><!--Vector Nav-->
+			<rate>1</rate>
+		</filter>
+		<filter>
+			<id>202</id><!--AeroProbe-->
+			<rate>1</rate>
+		</filter>
+	</udp_0>
+
+	<udp_1>
+		<use>0</use>
+		<debug>0</debug>
+		<broadcast>0</broadcast>
+		<address>localhost</address>
+		<bind_port>1027</bind_port>
+		<send_port>1028</send_port>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+		
+	</udp_1>
+
+	<udp_2>
+		<use>0</use>
+		<debug>0</debug>
+		<broadcast>0</broadcast>
+		<address>localhost</address>
+		<bind_port>1029</bind_port>
+		<send_port>1030</send_port>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+	</udp_2>
+
+	<logging_0>
+		<use>1</use>
+		<debug>0</debug>
+		<msg>/data/messages</msg>
+		<errors>/errors/errors</errors>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+	</logging_0>
+
+	<logging_1>
+		<use>0</use>
+		<debug>0</debug>
+		<msg>/data/other</msg>
+		<errors>/data/other</errors>
+		<msg_all>1</msg_all>
+		<msg_set>0</msg_set>
+	</logging_1>
+</config>

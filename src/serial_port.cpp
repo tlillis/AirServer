@@ -95,6 +95,8 @@ initialize_defaults()
     uart_name = (char*)"/dev/ttyUSB0";
     baudrate  = 57600;
 
+    msg_char_i = 0;
+
     // Start mutex
     int result = pthread_mutex_init(&lock, NULL);
     if ( result != 0 )
@@ -110,7 +112,7 @@ initialize_defaults()
 // ------------------------------------------------------------------------------
 int
 Serial_Port::
-read_message_mavlink(mavlink_message_t &message)
+read_message_mavlink(mavlink_message_t &message, int comm)
 {
     uint8_t          cp;
     mavlink_status_t status;
@@ -128,25 +130,59 @@ read_message_mavlink(mavlink_message_t &message)
     if (result > 0)
     {
         // the parsing
-        msgReceived = mavlink_parse_char(MAVLINK_COMM_0, cp, &message, &status);
+        msgReceived = mavlink_parse_char(comm, cp, &message, &status);
+
+        //printf("%x ", cp);
+        /**
+
+            if(msg_char_i < 5) {
+            msg_char_i++;
+
+        }
+
+        if(cp == 0xFE) {
+            msg_char_i = 0;
+            //printf("GOT NEW MESSAGE");
+        }
+        **/
+        //printf("%i\n", msg_char_i);
+        //msg_char[msg_char_i] = cp;
         // check for dropped packets
         if((msgReceived < 1) && (status.packet_rx_drop_count > 0))
         {
-            //printf("ERROR: DROPPED %d PACKETS\n", status.packet_rx_drop_count);
+            printf("ERROR: DROPPED %d PACKETS\n", status.packet_rx_drop_count);
+            //unsigned char v=cp;
+            //fprintf(stderr,"%02x \n", v);
+            /**
+            printf("CUREENT INDEX: %i\n", msg_char_i);
+            for(int i = 0; i < 6; i++) {
+                printf("%x ", msg_char[i]);
+            }
+            printf("\n");
+            **/
         }
+        
         if ( (lastStatus.packet_rx_drop_count != status.packet_rx_drop_count) && debug)
         {
             printf("ERROR: DROPPED %d PACKETS\n", status.packet_rx_drop_count);
             unsigned char v=cp;
             fprintf(stderr,"%02x \n", v);
         }
+        
+        if(msgReceived) {
+            //printf("PARSE ERROR: %i\n",status.parse_error);
+            //if(message.msgid == 27) {
+            //printf("GOT %i\n", message.msgid);
+            //}
+        }
+        
         lastStatus = status;
     }
 
     // Couldn't read from port
     else
     {
-        fprintf(stderr, "ERROR: Could not read from fd %d\n", fd);
+        //fprintf(stderr, "ERROR: Could not read from fd %d\n", fd);
     }
 
     // --------------------------------------------------------------------------
@@ -367,6 +403,7 @@ int
 Serial_Port::
 _open_port(const char* port)
 {
+    int flags;
     // Open serial port
     // O_RDWR - Read and write
     // O_NOCTTY - Ignore special chars like CTRL-C
@@ -382,7 +419,8 @@ _open_port(const char* port)
     // Finalize
     else
     {
-        fcntl(fd, F_SETFL, 0);
+        flags = fcntl(fd, F_GETFL, 0);
+        fcntl(fd, F_SETFL, O_NONBLOCK | flags);
     }
 
     // Done!
@@ -545,10 +583,10 @@ _read_port(uint8_t &cp)
 {
 
     // Lock
-    //pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);
     int result = read(fd, &cp, 1);
     // Unlock
-    //pthread_mutex_unlock(&lock);
+    pthread_mutex_unlock(&lock);
 
     return result;
 }
@@ -569,8 +607,8 @@ _write_port(char *buf, unsigned &len)
     write(fd, buf, len);
 
     // Wait until all data has been written
-    tcdrain(fd);
-
+    //tcdrain(fd);
+    //flush(fd);
     // Unlock
     pthread_mutex_unlock(&lock);
 

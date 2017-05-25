@@ -1,6 +1,6 @@
 // MESSAGE NCAR_PTH PACKING
 
-#define MAVLINK_MSG_ID_NCAR_PTH 200
+#define MAVLINK_MSG_ID_NCAR_PTH 240
 
 typedef struct __mavlink_ncar_pth_t
 {
@@ -14,10 +14,10 @@ typedef struct __mavlink_ncar_pth_t
 } mavlink_ncar_pth_t;
 
 #define MAVLINK_MSG_ID_NCAR_PTH_LEN 29
-#define MAVLINK_MSG_ID_200_LEN 29
+#define MAVLINK_MSG_ID_240_LEN 29
 
 #define MAVLINK_MSG_ID_NCAR_PTH_CRC 114
-#define MAVLINK_MSG_ID_200_CRC 114
+#define MAVLINK_MSG_ID_240_CRC 114
 
 
 

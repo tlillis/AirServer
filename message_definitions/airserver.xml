@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<mavlink>
+	<include>ardupilotmega.xml</include>
+	<include>common.xml</include>
+	<messages>
+		<message name="NCAR_PTH" id="240">
+			<description>
+
+			</description>
+			<field name="time_usec" type="uint64_t">Image timestamp (microseconds since UNIX epoch, according to camera clock)</field>
+			<field name="sample_num" type="uint8_t">Sample Number</field>
+			<field name="pressure" type="float">Pressure</field>
+			<field name="external_temp" type="float">External Temperature</field>
+			<field name="rh1" type="float">RH1</field>
+			<field name="rh2" type="float">RH2</field>
+			<field name="internal_temp" type="float">Internal Temperature</field>
+	     	</message>
+
+	    	<message name="VECTOR_NAV" id="241">
+			<description>
+
+			</description>
+			<field name="time_usec" type="uint64_t">Image timestamp (microseconds since UNIX epoch, according to camera clock)</field>
+			<field name="time_startup" type="uint64_t">Image timestamp (microseconds since UNIX epoch, according to camera clock)</field>
+			<field name="time_gps" type="uint64_t">Sample Number</field>
+			<field name="time_syncln" type="uint64_t">The time since the last SyncIn trigger event expressed in nano seconds.</field>
+			<field name="yaw" type="float">estimated yaw</field>
+			<field name="pitch" type="float">estimated pitch</field>
+			<field name="roll" type="float">estimated roll</field>
+			<field name="qtn_0" type="float">The estimated attitude quaternion. respect to the local North East Down (NED) frame.</field>
+			<field name="qtn_1" type="float">The estimated attitude quaternion. respect to the local North East Down (NED) frame.</field>
+			<field name="qtn_2" type="float">The estimated attitude quaternion. respect to the local North East Down (NED) frame.</field>
+			<field name="qtn_3" type="float">The estimated attitude quaternion. Scalar value.</field>
+			<field name="rate_0" type="float">The estimated angular rate measured in rad/s.</field>
+			<field name="rate_1" type="float">The estimated angular rate measured in rad/s.</field>
+			<field name="rate_2" type="float">The estimated angular rate measured in rad/s.</field>
+			<field name="lat" type="double">The estimated position</field>
+			<field name="lon" type="double">The estimated position</field>
+			<field name="alt" type="double">The estimated position</field>
+			<field name="vel_0" type="float">The estimated velocity in the North East Down (NED) frame, given in m/s.</field>
+			<field name="vel_1" type="float">The estimated velocity in the North East Down (NED) frame, given in m/s.</field>
+			<field name="vel_2" type="float">The estimated velocity in the North East Down (NED) frame, given in m/s.</field>
+			<field name="accel_0" type="float">The estimated acceleration in the body frame, given in m/s^2.</field>
+			<field name="accel_1" type="float">The estimated acceleration in the body frame, given in m/s^2.</field>
+			<field name="accel_2" type="float">The estimated acceleration in the body frame, given in m/s^2.</field>
+			<field name="imu_0" type="float">IMU angular rate</field>
+			<field name="imu_1" type="float">IMU angular rate</field>
+			<field name="imu_2" type="float">IMU angular rate</field>
+			<field name="imu_3" type="float">IMU acceleration measurement</field>
+			<field name="imu_4" type="float">IMU acceleration measurement</field>
+			<field name="imu_5" type="float">IMU acceleration measurement</field>
+			<field name="mag_pres_0" type="float">The compensated magnetic, temperature, and pressure measurements from the IMU.</field>
+			<field name="mag_pres_1" type="float">The compensated magnetic, temperature, and pressure measurements from the IMU.</field>
+			<field name="mag_pres_2" type="float">The compensated magnetic, temperature, and pressure measurements from the IMU.</field>
+			<field name="mag_pres_3" type="float">The compensated magnetic, temperature, and pressure measurements from the IMU.(temp)</field>
+			<field name="mag_pres_4" type="float">The compensated magnetic, temperature, and pressure measurements from the IMU.(pressure)</field>
+			<field name="delta_theta_0" type="float">delta time</field>
+			<field name="delta_theta_1" type="float">delta theta</field>
+			<field name="delta_theta_2" type="float">delta theta</field>
+			<field name="delta_theta_3" type="float">delta thela</field>
+			<field name="delta_theta_4" type="float">detla velocity</field>
+			<field name="delta_theta_5" type="float">delta velocity</field>
+			<field name="delta_theta_6" type="float">delta velocity</field>
+			<field name="ins_status" type="uint16_t">The INS status bitfield.</field>
+			<field name="syncln_cnt" type="uint32_t">The number of SyncIn trigger events that have occurred.</field>
+			<field name="gps_pps" type="uint64_t">The time since the last GPS PPS trigger event expressed in nano seconds.f</field>
+		</message>
+
+		<message name="AEROPROBE" id="242">
+			<description>
+
+			</description>
+			<field name="time_usec" type="uint64_t">Image timestamp (microseconds since UNIX epoch, according to camera clock)</field>
+			<field name="time_device" type="uint32_t">Sample Number</field>
+			<field name="date" type="uint32_t">Sample Number</field>
+			<field name="velocity" type="float">Velocity</field>
+			<field name="aoa" type="float">Angle of Attack</field>
+			<field name="aos" type="float">Angle of Slideslip</field>
+			<field name="pa" type="float">Pressure Altitude</field>
+			<field name="ps" type="float">Static Pressure</field>
+			<field name="pt" type="float">Total Pressure</field>
+			<field name="tc" type="float">Thermocouple Temp</field>
+		</message>
+	</messages>
+</mavlink>

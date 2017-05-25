@@ -121,7 +121,10 @@ public:
     int  baudrate;
     int  status;
 
-    int read_message_mavlink(mavlink_message_t &message);
+    unsigned char msg_char[6];
+    int msg_char_i;
+
+    int read_message_mavlink(mavlink_message_t &message, int comm);
     int read_message_raw(char &buf);
     int	write_message_mavlink(mavlink_message_t &message);
     int write_message_raw(char *buf, unsigned len);
